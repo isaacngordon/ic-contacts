@@ -5,34 +5,17 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+mod contact;
+mod user;
+mod new_contact;
+mod new_user;
+
+use contact::Contact;
+use user::User;
+use new_contact::NewContact;
+use new_user::NewUser;
+
 // Data Structures
-#[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
-pub struct Contact {
-    id: u64,
-    name: String,
-    email: String,
-    phone: String,
-}
-
-#[derive(CandidType, Deserialize, Serialize, Debug)]
-pub struct User {
-    username: String,
-    contacts: Vec<Contact>,
-    shared_contacts: Vec<u64>, // Contact IDs
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct NewContact {
-    name: String,
-    email: String,
-    phone: String,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct NewUser {
-    username: String,
-}
-
 // Global State
 static USERS: Lazy<Mutex<HashMap<String, User>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
