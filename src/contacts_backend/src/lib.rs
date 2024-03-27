@@ -1,7 +1,5 @@
-use candid::CandidType;
 use ic_cdk::{api, update};
 use once_cell::sync::Lazy;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Mutex;
 
