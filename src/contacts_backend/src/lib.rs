@@ -1,4 +1,4 @@
-use ic_cdk::{api, update};
+use ic_cdk::{api, query, update};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -23,6 +23,8 @@ fn get_user_id() -> String {
 }
 
 // Canister Functions
+
+/// Create a new user account by providing a unique username.
 #[update]
 fn create_account(new_user: NewUser) -> Result<(), String> {
     let user_id = get_user_id();
@@ -45,6 +47,20 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
     Ok(())
 }
 
+/// Get the list of contacts for the current user.
+#[query]
+fn get_contacts() -> Result<Vec<Contact>, String> {
+    let user_id = get_user_id();
+    let users = USERS.lock().unwrap();
+
+    if let Some(user) = users.get(&user_id) {
+        Ok(user.contacts.clone())
+    } else {
+        Err("User not found".to_string())
+    }
+}
+
+/// Create a new contact for the current user.
 #[update]
 fn add_contact(new_contact: NewContact) -> Result<(), String> {
     let user_id = get_user_id();
