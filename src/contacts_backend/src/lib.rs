@@ -244,19 +244,19 @@ mod tests {
 
         // Test creating a new account. (Requirement 1)
         let first_account_create = call_create_account(&pic, canister_id, principal1, user1);
-        assert!(first_account_create.is_ok());
+        assert!(first_account_create.is_ok(), "First account creation failed");
 
         // Test another user creates a new account with a different username. (Requirement 1)
         let second_account_create = call_create_account(&pic, canister_id, principal2, user2);
-        assert!(second_account_create.is_ok());
+        assert!(second_account_create.is_ok(), "Second account creation failed");
 
         // Test creating an account with a username that already exists. (Requirement 2)
         let already_registered_username =
             call_create_account(&pic, canister_id, principal3, user1_duplicate);
-        assert!(already_registered_username.is_err());
+        assert!(already_registered_username.is_err(), "Username already taken");
 
         // Test creating an account when user already has one. (Requirement 3)
         let already_registered_user = call_create_account(&pic, canister_id, principal2, user3);
-        assert!(already_registered_user.is_err());
+        assert!(already_registered_user.is_err(), "User already has an account");
     }
 }
