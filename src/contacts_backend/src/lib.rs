@@ -181,9 +181,10 @@ mod tests {
 
 
     fn load_contacts_backend_wasm() -> Vec<u8> {
-        let wasm_path = "../../../target/wasm32-unknown-unknown/release/contacts_backend.wasm";
+        let wasm_path = "/Users/isaacgordon/Documents/ic/contacts/target/wasm32-unknown-unknown/release/contacts_backend.wasm";
         std::fs::read(wasm_path)
-        .expect("Failed to read contacts_backend.wasm")
+        .unwrap()
+        // .expect("Failed to read contacts_backend.wasm")
     }
 
     /// Helper function to call the create_account function on the canister, and return a Result that can be checked immediately.
