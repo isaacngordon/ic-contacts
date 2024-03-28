@@ -39,7 +39,6 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
         .any(|existing_user| existing_user.username == new_user.username);
 
     if username_taken {
-    {
         return Err("Username already taken".to_string());
     }
 
