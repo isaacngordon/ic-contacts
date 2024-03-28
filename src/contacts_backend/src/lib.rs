@@ -237,10 +237,10 @@ mod tests {
         let wasm_bytes = load_contacts_backend_wasm();
         pic.install_canister(canister_id, wasm_bytes, vec![], None);
 
-        // Set up 3 fake principals for testing.
-        let principal1 = Principal::from_text("principal1").unwrap();
-        let principal2 = Principal::from_text("principal2").unwrap();
-        let principal3 = Principal::from_text("principal3").unwrap();
+        // Set up 3 mock principals for testing.
+        let principal1 = Principal::anonymous();
+        let principal2 = Principal::anonymous();
+        let principal3 = Principal::anonymous();
 
         // Test creating a new account. (Requirement 1)
         let first_account_create = call_create_account(&pic, canister_id, principal1, user1);
