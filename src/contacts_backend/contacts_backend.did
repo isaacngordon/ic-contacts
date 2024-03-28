@@ -1,6 +1,6 @@
 service : {
     "create_account": (record { "username": text }) -> () oneway;
-    "add_contact": (record { "name": text; "email": text; "phone": text }) -> () oneway;
+    "create_contact": (record { "name": text; "email": text; "phone": text }) -> () oneway;
     "edit_contact": (nat64, record { "name": text; "email": text; "phone": text }) -> () oneway;
     "delete_contact": (nat64) -> () oneway;
     "share_contact": (nat64, text) -> () oneway;

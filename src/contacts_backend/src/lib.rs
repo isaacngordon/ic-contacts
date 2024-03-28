@@ -61,8 +61,8 @@ fn get_contacts() -> Result<Vec<Contact>, String> {
 }
 
 /// Create a new contact for the current user.
-#[update]
-fn add_contact(new_contact: NewContact) -> Result<(), String> {
+#[update(name = "create_contact")]
+fn create_contact(new_contact: NewContact) -> Result<(), String> {
     let user_id = get_user_id();
     let mut users = USERS.lock().unwrap();
 
