@@ -174,36 +174,77 @@ fn revoke_shared_contact(contact_id: u64, recipient_username: String) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ic_cdk::api::call::test::{set_caller, Call};
-    use ic_cdk::export::Principal;
+    use candid::{self, encode_one, Principal};
+    use ic_cdk::api::management_canister::main::CanisterId;
+    use pocket_ic::{PocketIc, WasmResult};
+    
 
+
+    fn load_contacts_backend_wasm() -> Vec<u8> {
+        let wasm_path = "../../../target/wasm32-unknown-unknown/release/contacts_backend.wasm";
+        std::fs::read(wasm_path)
+        .expect("Failed to read contacts_backend.wasm")
+    }
+
+    /// Helper function to call the create_account function on the canister, and return a Result that can be checked immediately.
+    fn call_create_account(pic: &PocketIc, canister_id: CanisterId, principal: Principal, new_user: NewUser) -> Result<(), String> {
+        let wasm_result = pic.update_call(canister_id, principal, "create_account", encode_one(new_user).unwrap())
+            .expect("Failed to call create_account");
+        match wasm_result {
+            WasmResult::Reply(_) => Ok(()),
+            WasmResult::Reject(reject_message) => Err(reject_message),
+        }
+    }
+
+    /// Testing the create_account function and its adherence to the requirements.
+    /// The requirements are:
+    /// 1. A user can create an account with a unique username.
+    /// 2. A user cannot create an account with a username that already exists.
+    /// 3. A user cannot create an account if they already have one.
     #[test]
     fn test_create_account() {
+        // Set up 4 users, 3 with unique usernames and 1 duplicate username.
         let user1 = NewUser {
             username: "user1".to_string(),
         };
         let user2 = NewUser {
             username: "user2".to_string(),
         };
+        let user3 = NewUser {
+            username: "user3".to_string(),
+        };
         let user1_duplicate = NewUser {
             username: "user1".to_string(),
         };
 
-        // Set a fake caller principal for testing.
-        set_caller(Principal::anonymous());
+        // init pocket-ic canister
+        let pic = PocketIc::new();
+        let canister_id = pic.create_canister();
+        pic.add_cycles(canister_id, 2_000_000_000_000);
 
-        // Clear the USERS HashMap before testing.
-        let mut users = USERS.lock().unwrap();
-        users.clear();
-        drop(users); // Explicitly drop to release the lock.
+        // install wasm on canister
+        let wasm_bytes = load_contacts_backend_wasm();
+        pic.install_canister(canister_id, wasm_bytes, vec![], None);
 
-        // Test creating a new account.
-        assert!(create_account(user1).is_ok());
+        // Set up 3 fake principals for testing.
+        let principal1 = Principal::from_text("principal1").unwrap();
+        let principal2 = Principal::from_text("principal2").unwrap();
+        let principal3 = Principal::from_text("principal3").unwrap();
 
-        // Test creating another new account with a different username.
-        assert!(create_account(user2).is_ok());
+        // Test creating a new account. (Requirement 1)
+        let first_account_create = call_create_account(&pic, canister_id, principal1, user1);
+        assert!(first_account_create.is_ok());
+        
+        // Test another user creates a new account with a different username. (Requirement 1)
+        let second_account_create = call_create_account(&pic, canister_id, principal2, user2);
+        assert!(second_account_create.is_ok());
 
-        // Test creating an account with a username that already exists.
-        assert!(create_account(user1_duplicate).is_err());
+        // Test creating an account with a username that already exists. (Requirement 2)
+        let already_registered_username = call_create_account(&pic, canister_id, principal3, user1_duplicate);
+        assert!(already_registered_username.is_err());
+        
+        // Test creating an account when user already has one. (Requirement 3)
+        let already_registered_user= call_create_account(&pic, canister_id, principal2, user3);
+        assert!(already_registered_user.is_err());
     }
 }
