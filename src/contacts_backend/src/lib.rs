@@ -180,7 +180,7 @@ mod tests {
     use pocket_ic::{PocketIc, WasmResult};
 
     fn load_contacts_backend_wasm() -> Vec<u8> {
-        let wasm_path = "/Users/isaacgordon/Documents/ic/contacts/target/wasm32-unknown-unknown/release/contacts_backend.wasm";
+        let wasm_path = "target/wasm32-unknown-unknown/release/contacts_backend.wasm";
         std::fs::read(wasm_path).unwrap_or_else(|_| {
             panic!("Failed to read contacts_backend.wasm")
         })
