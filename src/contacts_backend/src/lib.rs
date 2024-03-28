@@ -171,3 +171,39 @@ fn revoke_shared_contact(contact_id: u64, recipient_username: String) -> Result<
         return Err("Owner not found".to_string());
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ic_cdk::api::call::test::{set_caller, Call};
+    use ic_cdk::export::Principal;
+
+    #[test]
+    fn test_create_account() {
+        let user1 = NewUser {
+            username: "user1".to_string(),
+        };
+        let user2 = NewUser {
+            username: "user2".to_string(),
+        };
+        let user1_duplicate = NewUser {
+            username: "user1".to_string(),
+        };
+
+        // Set a fake caller principal for testing.
+        set_caller(Principal::anonymous());
+
+        // Clear the USERS HashMap before testing.
+        let mut users = USERS.lock().unwrap();
+        users.clear();
+        drop(users); // Explicitly drop to release the lock.
+
+        // Test creating a new account.
+        assert!(create_account(user1).is_ok());
+
+        // Test creating another new account with a different username.
+        assert!(create_account(user2).is_ok());
+
+        // Test creating an account with a username that already exists.
+        assert!(create_account(user1_duplicate).is_err());
+    }
+}
