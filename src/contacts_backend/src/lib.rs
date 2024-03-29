@@ -65,9 +65,9 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
     }
 
     // this seems like it would be slow as it iterates over all users to check if the username is taken
-    let username_taken = USER_MAP.with(
-        |p| p.borrow().iter().any(|(_, username)| username == new_user.username)
-    );
+    let username_taken: bool = USER_MAP.with(|p| {
+        p.borrow().iter().any(|(_, existing_username)| *existing_username == new_user.username)
+    });
     println!("username_taken: {}", username_taken);
     if username_taken {
         return Err("Username already taken".to_string());
