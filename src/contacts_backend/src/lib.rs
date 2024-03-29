@@ -1,9 +1,9 @@
 mod data;
 
+use data::new_user::NewUser;
 use ic_cdk::{api, query, update};
 
 use data::contact::{Contact, ContactID};
-use data::new_user::NewUser;
 use data::user::User;
 
 // Data Structures
@@ -36,6 +36,14 @@ thread_local! {
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1))),
         )
     );
+
+    // Initialize a `StableBTreeMap` with `MemoryId(2)` for usernames to principal mappings.
+    static USERNAME_MAP: RefCell<StableBTreeMap<String, Principal, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2))),
+        )
+    );
+
 }
 
 // Helper Functions
@@ -67,12 +75,9 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
     }
 
     // check if username is already taken
-    let username_taken: bool = USER_MAP.with(|p| {
-        p.borrow()
-            .iter()
-            .map(|(_, user)| user.username.clone())
-            .any(|username| username == new_user.username)
-    });
+    // TODO: Panicking at user.rs line 22 when decoding the bytes
+    let username_taken: bool = USERNAME_MAP.with(|p| p.borrow().contains_key(&new_user.username));
+
     if username_taken {
         ic_cdk::println!("/create_account [REJECT] - Username already taken");
         return Err("Username already taken".to_string());
@@ -85,7 +90,10 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
         contacts: Vec::new(),
         shared_contacts: Vec::new(),
     };
+    
     USER_MAP.with(|p| p.borrow_mut().insert(principal, user.clone()));
+    USERNAME_MAP.with(|p| p.borrow_mut().insert(new_user.username.clone(), principal));
+
     ic_cdk::println!("/create_account [DONE] - User: {:?}", user);
     Ok(())
 }

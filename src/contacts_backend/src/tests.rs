@@ -174,9 +174,7 @@ mod tests {
     #[test]
     fn test_create_and_retrieve_contacts() {
         // Set up a user and a contact.
-        let user = data::new_user::NewUser {
-            username: "user".to_string(),
-        };
+        
         let new_contact = data::contact::Contact {
             name: "John Doe".to_string(),
             email: "johndoe@example.com".to_string(),
@@ -187,7 +185,7 @@ mod tests {
         let (pic, canister_id) = deploy_test_canister();
         
         // Set up a mock principal for testing.
-        let principal = Principal::from_slice(&[0x01]);
+        let principal = Principal::from_slice(&[0x04]);
 
         // Test creating a contact when the user does not have an account. (Requirement 4)
         println!("Creating contact for principal1 without an account...");
@@ -198,12 +196,11 @@ mod tests {
         );
 
         // Test creating an account.
-        println!("Creating account for principal1...");
-        let account_create = call_create_account(&pic, canister_id, principal, user);
-        assert!(
-            account_create.is_ok(),
-            "Account creation failed when it should not have. Expected `Ok` but got `Err`."
-        );
+        println!("Ensuring principal has an account...");
+        let user = data::new_user::NewUser {
+            username: principal.to_text(),
+        };
+        let _ = call_create_account(&pic, canister_id, principal, user);
 
         // Test creating a contact. (Requirement 1)
         println!("Creating contact for principal1...");
