@@ -1,11 +1,10 @@
-use candid::CandidType;
-use candid::{CandidType, Deserialize, Serialize, Encode, Decode};
+use candid::{CandidType, Deserialize, Encode, Decode};
 use ic_stable_structures::{
     storable::Bound, Storable,
 };
 use std::borrow::Cow;
 
-#[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
+#[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Contact {
     pub id: u64,
     pub name: String,
