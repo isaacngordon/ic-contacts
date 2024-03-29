@@ -147,6 +147,7 @@ fn create_contact(new_contact: Contact) -> Result<(), String> {
     Ok(())
 }
 
+
 // #[update]
 // fn edit_contact(contact_id: u64, updated_contact: NewContact) -> Result<(), String> {
 //     let user_id = get_user_id();
