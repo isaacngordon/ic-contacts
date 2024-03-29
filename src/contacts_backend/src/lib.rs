@@ -2,14 +2,14 @@ mod data;
 
 use ic_cdk::{api, query, update};
 
-use data::contact::Contact;
+use data::contact::{Contact, ContactID};
 use data::new_user::NewUser;
 use data::user::User;
 
 // Data Structures
+use candid::Principal;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
-use candid::Principal;
 use std::cell::RefCell;
 
 mod tests; // This line will be modified to point to the new tests.rs file.
@@ -23,17 +23,32 @@ thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
         RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
-    // Initialize a `StableBTreeMap` with `MemoryId(0)`.
+    // Initialize a `StableBTreeMap` with `MemoryId(0)` for User storage.
     static USER_MAP: RefCell<StableBTreeMap<Principal, User, Memory>> = RefCell::new(
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))),
         )
     );
+
+    // Initialize a `StableBTreeMap` with `MemoryId(1)` Contact storage.
+    static CONTACT_MAP: RefCell<StableBTreeMap<ContactID, Contact, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1))),
+        )
+    );
 }
-    
+
 // Helper Functions
 fn get_user_id() -> Principal {
     api::caller()
+}
+
+/// whomai i call
+#[query]
+fn whoami() -> (Principal, Option<String>) {
+    let user_id = get_user_id();
+    let user = USER_MAP.with(|user_map| user_map.borrow().get(&user_id));
+    (user_id, user.map(|u| u.username.clone()))
 }
 
 /// Create a new user account by providing a unique username.
@@ -49,7 +64,9 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
 
     // check if username is already taken
     let username_taken: bool = USER_MAP.with(|p| {
-        p.borrow().iter().any(|(_, existing_user)| *existing_user.username == new_user.username)
+        p.borrow()
+            .iter()
+            .any(|(_, existing_user)| *existing_user.username == new_user.username)
     });
     if username_taken {
         return Err("Username already taken".to_string());
@@ -62,7 +79,7 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
         shared_contacts: Vec::new(),
     };
     USER_MAP.with(|p| p.borrow_mut().insert(principal, user.clone()));
-    
+
     Ok(())
 }
 
@@ -70,59 +87,49 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
 #[query]
 fn get_contacts() -> Result<Vec<Contact>, String> {
     let user_id = get_user_id();
-    USER_MAP.with(|user_map| {
-        let users = user_map.borrow();
-        let user: Option<User> = users.get(&user_id);
 
-        match user {
-            Some(u) => Ok(u.contacts.clone()),
-            None => Err("User not found".to_string()),
-        }
-    })
+    let contact_ids:Vec<ContactID> = USER_MAP.with(|user_map| {
+        user_map
+            .borrow()
+            .get(&user_id)
+            .map_or(
+                Err("User not found".to_string()), 
+                |u| { Ok(u.contacts.clone()) }
+            )
+    })?;
+
+    let contacts:Vec<Contact> = CONTACT_MAP.with(|contact_map| {
+        let contacts = contact_map.borrow();
+        contact_ids
+            .iter()
+            .map(|id| {
+                contacts.get(id).unwrap().clone()
+            })
+            .collect()
+    });
+
+    Ok(contacts)
 }
 
 /// Create a new contact for the current user.
 #[update(name = "create_contact")]
 fn create_contact(new_contact: Contact) -> Result<(), String> {
     let user_id = get_user_id();
+    let user: Option<User> = USER_MAP.with(|p| p.borrow().get(&user_id));
+    let user = user.ok_or("User not found".to_string())?;
+    
+    let new_contact_id = CONTACT_MAP.with(|p| {
+        let mut contacts = p.borrow_mut();
+        let new_id = contacts.len() as u64;
+        contacts.insert(new_id, new_contact.clone());
+        new_id
+    });
 
-    USER_MAP.with(|user_map| {
-        let users = user_map.borrow_mut();
-        let user: Option<User> = users.get(&user_id);
-
-        match user {
-            Some(mut u) => {
-                let contact = Contact {
-                    name: new_contact.name.clone(),
-                    email: new_contact.email.clone(),
-                    phone: new_contact.phone.clone(),
-                };
-                u.contacts.push(contact);
-                Ok(())
-            }
-            None => Err("User not found".to_string()),
-        }
-    })
-    // let mut users = USER_MAP.with(|p| *p.borrow_mut());
-    // let user = users.get(&user_id);
-
-    // if user.is_none() {
-    //     return Err("User not found".to_string());
-    // }
-
-    // match user {
-    //     Some(mut u) => {
-    //         let contact = Contact {
-    //             id: 0,
-    //             name: new_contact.name.clone(),
-    //             email: new_contact.email.clone(),
-    //             phone: new_contact.phone.clone(),
-    //         };
-    //         u.contacts.push(contact);
-    //         Ok(())
-    //     }
-    //     None => Err("User not found".to_string()),
-    // }
+    let mut updated_user = user.clone();
+    updated_user.contacts.push(new_contact_id);
+    USER_MAP.with(|p| p.borrow_mut().insert(user_id, updated_user));
+    
+    Ok(())
 }
 
 // #[update]

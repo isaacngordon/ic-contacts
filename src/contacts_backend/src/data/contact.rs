@@ -4,7 +4,9 @@ use ic_stable_structures::{
 };
 use std::borrow::Cow;
 
-#[derive(CandidType, Deserialize, Debug, Clone)]
+pub type ContactID = u64;
+
+#[derive(CandidType, Deserialize, Debug, Clone, PartialEq)]
 pub struct Contact {
     pub name: String,
     pub email: String,

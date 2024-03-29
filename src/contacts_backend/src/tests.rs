@@ -85,7 +85,7 @@ mod tests {
         principal: Principal,
     ) -> Result<Vec<data::contact::Contact>, String> {
         let wasm_result = pic
-            .query_call(canister_id, principal, "get_contacts", vec![])
+            .query_call(canister_id, principal, "get_contacts", encode_one(()).unwrap())
             .expect("Failed to call get_contacts");
 
         match wasm_result {
@@ -220,5 +220,14 @@ mod tests {
             contacts.is_ok(),
             "Failed to retrieve contacts. Expected `Ok` but got `Err`."
         );
+
+        // Test that contacts contain the created contact
+        let retrieved_contacts = contacts.unwrap();
+        println!("Number of retrieved contacts: {}", retrieved_contacts.len());
+        assert!(
+            retrieved_contacts.contains(&new_contact),
+            "Retrieved contacts do not contain the created contact."
+        );
+        
     }
 }
