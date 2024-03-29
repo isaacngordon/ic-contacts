@@ -1,5 +1,5 @@
 use candid::CandidType;
-use serde::{Deserialize, Serialize, Encode, Decode};
+use candid::{CandidType, Deserialize, Serialize, Encode, Decode};
 use ic_stable_structures::{
     storable::Bound, Storable,
 };
