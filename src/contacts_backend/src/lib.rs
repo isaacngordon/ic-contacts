@@ -26,7 +26,7 @@ thread_local! {
         RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
     // Initialize a `StableBTreeMap` with `MemoryId(0)`.
-    static USER_MAP: RefCell<StableBTreeMap<Principal, String, Memory>> = RefCell::new(
+    static USER_MAP: RefCell<StableBTreeMap<Principal, User, Memory>> = RefCell::new(
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))),
         )
@@ -36,20 +36,6 @@ thread_local! {
 // Helper Functions
 fn get_user_id() -> Principal {
     api::caller()
-}
-
-// Retrieves the value associated with the given key if it exists.
-#[query]
-fn get() -> Option<String> {
-    let key = get_user_id();
-    USER_MAP.with(|p| p.borrow().get(&key))
-}
-
-// Inserts an entry into the map and returns the previous value of the key if it exists.
-#[update]
-fn insert(value: String) -> Option<String> {
-    let key = get_user_id();
-    USER_MAP.with(|p| p.borrow_mut().insert(key, value))
 }
 
 /// Create a new user account by providing a unique username.
@@ -66,7 +52,7 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
 
     // this seems like it would be slow as it iterates over all users to check if the username is taken
     let username_taken: bool = USER_MAP.with(|p| {
-        p.borrow().iter().any(|(_, existing_username)| *existing_username == new_user.username)
+        p.borrow().iter().any(|(_, existing_user)| *existing_user.username == new_user.username)
     });
     println!("username_taken: {}", username_taken);
     if username_taken {
@@ -74,13 +60,13 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
     }
 
     let user = User {
-        username: new_user.username,
-        contacts: Vec::new(),
-        shared_contacts: Vec::new(),
+        username: new_user.username.clone(),
+        // contacts: Vec::new(),
+        // shared_contacts: Vec::new(),
     };
 
-    USER_MAP.with(|p| p.borrow_mut().insert(principal, user.username.clone()));
-    println!("user inserted: {}", user.username);
+    USER_MAP.with(|p| p.borrow_mut().insert(principal, user.clone()));
+    println!("user inserted: {:?}", user);
 
     Ok(())
 }
