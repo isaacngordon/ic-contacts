@@ -16,7 +16,7 @@ use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use candid::Principal;
 use std::cell::RefCell;
 
-mod tests;
+mod tests; // This line will be modified to point to the new tests.rs file.
 
 // Global State
 type Memory = VirtualMemory<DefaultMemoryImpl>;
