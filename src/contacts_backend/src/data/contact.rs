@@ -6,7 +6,6 @@ use std::borrow::Cow;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Contact {
-    pub id: u64,
     pub name: String,
     pub email: String,
     pub phone: String,

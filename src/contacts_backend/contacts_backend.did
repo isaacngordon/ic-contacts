@@ -1,6 +1,9 @@
+type Contact = record { "name": text; "email": text; "phone": text }
+
 service : {
     "create_account": (record { "username": text }) -> () oneway;
-    "create_contact": (record { "name": text; "email": text; "phone": text }) -> () oneway;
+    "create_contact": (Contact) -> () oneway;
+    "get_contacts": () -> (vec Contact ) query;
     "edit_contact": (nat64, record { "name": text; "email": text; "phone": text }) -> () oneway;
     "delete_contact": (nat64) -> () oneway;
     "share_contact": (nat64, text) -> () oneway;
