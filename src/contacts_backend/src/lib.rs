@@ -75,7 +75,6 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
     }
 
     // check if username is already taken
-    // TODO: Panicking at user.rs line 22 when decoding the bytes
     let username_taken: bool = USERNAME_MAP.with(|p| p.borrow().contains_key(&new_user.username));
 
     if username_taken {
