@@ -42,32 +42,29 @@ fn get_user_id() -> Principal {
 #[update]
 fn create_account(new_user: NewUser) -> Result<(), String> {
     let principal = get_user_id();
-    println!("principal: {}", principal);
 
+    // check if user already has an account
     let user_exists: bool = USER_MAP.with(|p| p.borrow().contains_key(&principal));
-    println!("user_exists: {}", user_exists);
     if user_exists {
         return Err("User already has an account".to_string());
     }
 
-    // this seems like it would be slow as it iterates over all users to check if the username is taken
+    // check if username is already taken
     let username_taken: bool = USER_MAP.with(|p| {
         p.borrow().iter().any(|(_, existing_user)| *existing_user.username == new_user.username)
     });
-    println!("username_taken: {}", username_taken);
     if username_taken {
         return Err("Username already taken".to_string());
     }
 
+    // create new user
     let user = User {
         username: new_user.username.clone(),
-        // contacts: Vec::new(),
-        // shared_contacts: Vec::new(),
+        contacts: Vec::new(),
+        shared_contacts: Vec::new(),
     };
-
     USER_MAP.with(|p| p.borrow_mut().insert(principal, user.clone()));
-    println!("user inserted: {:?}", user);
-
+    
     Ok(())
 }
 

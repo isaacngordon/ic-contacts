@@ -4,13 +4,13 @@ use ic_stable_structures::{
     storable::Bound, Storable,
 };
 use std::borrow::Cow;
-// use super::contact::Contact;
+use super::contact::Contact;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct User {
     pub username: String,
-    // pub contacts: Vec<Contact>,
-    // pub shared_contacts: Vec<u64>, // Contact IDs
+    pub contacts: Vec<Contact>,
+    pub shared_contacts: Vec<u64>, // Contact IDs
 }
 
 impl Storable for User {
