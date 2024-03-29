@@ -1,14 +1,11 @@
-mod contact;
-mod new_contact;
-mod new_user;
-mod user;
+mod data;
 
 use ic_cdk::{api, query, update};
 
-use contact::Contact;
-use new_contact::NewContact;
-use new_user::NewUser;
-use user::User;
+use data::contact::Contact;
+use data::new_contact::NewContact;
+use data::new_user::NewUser;
+use data::user::User;
 
 // Data Structures
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
@@ -83,24 +80,24 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
 //     }
 // }
 
-// Create a new contact for the current user.
+// /// Create a new contact for the current user.
 // #[update(name = "create_contact")]
 // fn create_contact(new_contact: NewContact) -> Result<(), String> {
 //     let user_id = get_user_id();
-//     let mut users = USER_MAP.lock().unwrap();
 
-//     if let Some(user) = users.get_mut(&user_id) {
-//         let new_id = user.contacts.len() as u64 + 1;
-//         let contact = Contact {
-//             id: new_id,
-//             name: new_contact.name,
-//             email: new_contact.email,
-//             phone: new_contact.phone,
-//         };
-//         user.contacts.push(contact);
-//         Ok(())
-//     } else {
-//         Err("User not found".to_string())
+//     let mut user = USER_MAP.with(|p| p.borrow_mut().get_mut(&user_id));
+//     match user {
+//         Some(user) => {
+//             let contact = Contact {
+//                 id: 0,
+//                 name: new_contact.name.clone(),
+//                 email: new_contact.email.clone(),
+//                 phone: new_contact.phone.clone(),
+//             };
+//             user.contacts.push(contact);
+//             Ok(())
+//         }
+//         None => Err("User not found".to_string()),
 //     }
 // }
 

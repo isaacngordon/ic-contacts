@@ -1,12 +1,13 @@
+
 #[cfg(test)]
 mod tests {
-    use crate::new_user;
+    use crate::data;
 
     use candid::{self, encode_one, Principal};
     use ic_cdk::api::management_canister::main::CanisterId;
     use pocket_ic::{PocketIc, WasmResult};
 
-    use new_user::NewUser;
+    use data::new_user::NewUser;
 
     fn load_contacts_backend_wasm() -> Vec<u8> {
         let wasm_path = "/Users/isaacgordon/Documents/ic/contacts/target/wasm32-unknown-unknown/release/contacts_backend.wasm";
