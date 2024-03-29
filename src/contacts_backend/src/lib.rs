@@ -242,7 +242,10 @@ mod tests {
         match wasm_result {
             WasmResult::Reply(x) => {
                 eprintln!("Reply: {:?}", x);
-                Ok(())
+            WasmResult::Reply(reply_bytes) => {
+                let decoded: Result<(), String> = candid::decode_one(&reply_bytes)
+                    .expect("Failed to decode reply");
+                decoded
             },
             WasmResult::Reject(reject_message) => {
                 eprintln!("Reject message: {}", reject_message);
