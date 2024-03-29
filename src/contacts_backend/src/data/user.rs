@@ -1,4 +1,3 @@
-
 use candid::{CandidType, Decode, Deserialize, Encode};
 use ic_stable_structures::{
     storable::Bound, Storable,
@@ -18,8 +17,8 @@ impl Storable for User {
         Cow::Owned(Encode!(self).unwrap())
     }
 
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Result<Self, String> {
+        Decode!(bytes.as_ref(), Self).map_err(|e| e.to_string())
     }
 
     const BOUND: Bound = Bound::Unbounded;
