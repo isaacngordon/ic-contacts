@@ -1,8 +1,9 @@
-type Contact = record { "name": text; "email": text; "phone": text }
+type Contact = record { "name": text; "email": text; "phone": text };
+type Error = text;
 
 service : {
     "whoami": () -> (principal, opt text) query;
-    "create_account": (record { "username": text }) -> () oneway;
+    "create_account": (record { "username": text }) -> (variant { ok: null; err: Error });
     "create_contact": (Contact) -> () oneway;
     "get_contacts": () -> (vec Contact ) query;
     "edit_contact": (nat64, record { "name": text; "email": text; "phone": text }) -> () oneway;

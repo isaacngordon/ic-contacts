@@ -47,18 +47,22 @@ fn get_user_id() -> Principal {
 #[query]
 fn whoami() -> (Principal, Option<String>) {
     let user_id = get_user_id();
-    let user = USER_MAP.with(|user_map| user_map.borrow().get(&user_id));
-    (user_id, user.map(|u| u.username.clone()))
+    ic_cdk::println!("/whoami [QUERY] - Principal={:?}", user_id.to_text());
+    let user: Option<User> = USER_MAP.with(|user_map| user_map.borrow().get(&user_id));
+    let username = user.map(|u| u.username);
+    (user_id, username)
 }
 
 /// Create a new user account by providing a unique username.
 #[update]
 fn create_account(new_user: NewUser) -> Result<(), String> {
     let principal = get_user_id();
+    ic_cdk::println!("/create_account [UPDATE] - Principal={:?} Username={}", principal.to_string(), new_user.username);
 
     // check if user already has an account
     let user_exists: bool = USER_MAP.with(|p| p.borrow().contains_key(&principal));
     if user_exists {
+        ic_cdk::println!("/create_account [REJECT] - User already has an account");
         return Err("User already has an account".to_string());
     }
 
@@ -66,20 +70,23 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
     let username_taken: bool = USER_MAP.with(|p| {
         p.borrow()
             .iter()
-            .any(|(_, existing_user)| *existing_user.username == new_user.username)
+            .map(|(_, user)| user.username.clone())
+            .any(|username| username == new_user.username)
     });
     if username_taken {
+        ic_cdk::println!("/create_account [REJECT] - Username already taken");
         return Err("Username already taken".to_string());
     }
 
     // create new user
+    ic_cdk::println!("/create_account [INFO] - Creating new user");
     let user = User {
         username: new_user.username.clone(),
         contacts: Vec::new(),
         shared_contacts: Vec::new(),
     };
     USER_MAP.with(|p| p.borrow_mut().insert(principal, user.clone()));
-
+    ic_cdk::println!("/create_account [DONE] - User: {:?}", user);
     Ok(())
 }
 
