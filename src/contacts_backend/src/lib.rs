@@ -16,6 +16,8 @@ use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use candid::Principal;
 use std::cell::RefCell;
 
+mod tests;
+
 // Global State
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
