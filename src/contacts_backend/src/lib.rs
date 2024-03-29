@@ -213,7 +213,7 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use candid::{self, encode_one, Principal};
+    use candid::{self, de, encode_one, Principal};
     use ic_cdk::api::management_canister::main::CanisterId;
     use pocket_ic::{PocketIc, WasmResult};
 
@@ -240,11 +240,10 @@ mod tests {
             )
             .expect("Failed to call create_account");
         match wasm_result {
-            WasmResult::Reply(x) => {
-                eprintln!("Reply: {:?}", x);
             WasmResult::Reply(reply_bytes) => {
                 let decoded: Result<(), String> = candid::decode_one(&reply_bytes)
                     .expect("Failed to decode reply");
+                eprintln!("Reply: {:?}", decoded);
                 decoded
             },
             WasmResult::Reject(reject_message) => {
