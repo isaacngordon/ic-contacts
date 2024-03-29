@@ -239,6 +239,7 @@ mod tests {
                 encode_one(new_user).unwrap(),
             )
             .expect("Failed to call create_account");
+        
         match wasm_result {
             WasmResult::Reply(reply_bytes) => {
                 let decoded: Result<(), String> = candid::decode_one(&reply_bytes)
