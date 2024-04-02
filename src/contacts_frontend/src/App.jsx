@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import UserCard from '@components/UserCard';
-import contacts_backend from '@declarations/contacts_backend';
+import {contacts_backend} from '@declarations/contacts_backend';
 
 let actor = contacts_backend;
 
@@ -54,6 +54,10 @@ function App() {
     await contacts_backend.revoke_shared_contact(contactId, revokeFromUsername);
     // Fetch contacts or update state as needed
   };
+
+  const setActor = (actor) => {
+    actor = actor;
+  }
 
 
   // Placeholder for the new UI components and interactions

@@ -1,7 +1,7 @@
 import React from 'react';
-import { AuthClient } from "@dfinity/auth-client";
-import { HttpAgent } from "@dfinity/agent";
-import { createActor } from "../../declarations/contacts_backend";
+// import { AuthClient } from "@dfinity/auth-client";
+// import { HttpAgent } from "@dfinity/agent";
+import { createActor } from "@declarations/contacts_backend";
 
 let actor;
 
@@ -12,22 +12,22 @@ function UserCard({ setActor }) {
   };
 
   const handleLogin = async () => {
-    let authClient = await AuthClient.create();
-    await new Promise((resolve) => {
-      authClient.login({
-        identityProvider:
-          process.env.DFX_NETWORK === "ic"
-            ? "https://identity.ic0.app"
-            : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
-        onSuccess: resolve,
-      });
-    });
-    const identity = authClient.getIdentity();
-    const agent = new HttpAgent({ identity });
-    actor = createActor(process.env.CANISTER_ID_CONTACTS_BACKEND, {
-      agent,
-    });
-    setActor(actor);
+    // let authClient = await AuthClient.create();
+    // await new Promise((resolve) => {
+    //   authClient.login({
+    //     identityProvider:
+    //       process.env.DFX_NETWORK === "ic"
+    //         ? "https://identity.ic0.app"
+    //         : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
+    //     onSuccess: resolve,
+    //   });
+    // });
+    // const identity = authClient.getIdentity();
+    // const agent = new HttpAgent({ identity });
+    // actor = createActor(process.env.CANISTER_ID_CONTACTS_BACKEND, {
+    //   agent,
+    // });
+    // setActor(actor);
   };
 
   return (
