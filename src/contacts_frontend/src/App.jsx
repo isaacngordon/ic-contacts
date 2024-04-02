@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { AuthClient } from "@dfinity/auth-client";
-import { HttpAgent } from "@dfinity/agent";
-import {
-    createActor,
-    contacts_backend,
-} from "../../declarations/contacts_backend";
+import UserCard from './components/UserCard';
 
 let actor = contacts_backend;
 
-console.log(process.env.CANISTER_ID_CONTACTS_BACKEND);
+let actor;
 
 const emptyContact = { name: '', email: '', phone: '' };
 
@@ -20,31 +15,10 @@ function App() {
   const [authClient, setAuthClient] = useState(null);
 
   useEffect(() => {
-    AuthClient.create().then(setAuthClient);
+    // Removed the AuthClient creation from here
   }, []);
 
-  const handleWhoAmI = async () => {
-    const principal = await actor.whoami();
-    document.getElementById("principal").innerText = principal.toString();
-  };
-
-  const handleLogin = async () => {
-    let authClient = await AuthClient.create();
-    await new Promise((resolve) => {
-      authClient.login({
-        identityProvider:
-          process.env.DFX_NETWORK === "ic"
-            ? "https://identity.ic0.app"
-            : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
-        onSuccess: resolve,
-      });
-    });
-    const identity = authClient.getIdentity();
-    const agent = new HttpAgent({ identity });
-    actor = createActor(process.env.CANISTER_ID_CONTACTS_BACKEND, {
-      agent,
-    });
-  };
+  // ... rest of the App component ...
 
   const handleCreateAccount = async () => {
     await contacts_backend.create_account({ username });
@@ -89,14 +63,7 @@ function App() {
       <img src="logo2.svg" alt="DFINITY logo" />
       <br />
       <br />
-      <form>
-        <button id="login" onClick={handleLogin}>Login!</button>
-      </form>
-      <br />
-      <form>
-        <button id="whoAmI" onClick={handleWhoAmI}>Who Am I</button>
-      </form>
-      <section id="principal"></section>
+      <UserCard setActor={setActor} />
       {/* UI components for account creation */}
       <section>
         <input
@@ -109,6 +76,7 @@ function App() {
       </section>
       {/* UI components for contact management */}
       {/* ... Add form elements and buttons for add, edit, delete, share, and revoke operations ... */}
+      {/* ... rest of the UI components ... */}
     </main>
   );
 }
