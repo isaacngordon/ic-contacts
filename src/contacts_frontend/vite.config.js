@@ -38,16 +38,12 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: "declarations",
-        replacement: fileURLToPath(
-          new URL("../declarations", import.meta.url)
-        ),
+        find: "@declarations",
+        replacement: fileURLToPath(new URL("./src/declarations", import.meta.url)),
       },
       {
-        find: "components",
-        replacement: fileURLToPath(
-          new URL("./src/components", import.meta.url)
-        ),
+        find: "@components",
+        replacement: fileURLToPath(new URL("./components", import.meta.url)),
       }
     ],
   },
