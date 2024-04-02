@@ -3,23 +3,12 @@ import { AuthClient } from "@dfinity/auth-client";
 import { HttpAgent } from "@dfinity/agent";
 import {
     createActor,
-    ii_integration_backend,
-} from "../../declarations/ii_integration_backend";
+    contacts_backend,
+} from "../../declarations/contacts_backend";
 
-let actor = ii_integration_backend;
+let actor = contacts_backend;
 
-console.log(process.env.CANISTER_ID_INTERNET_IDENTITY);
-import { AuthClient } from "@dfinity/auth-client";
-import { HttpAgent } from "@dfinity/agent";
-import {
-    createActor,
-    ii_integration_backend,
-} from "../../declarations/ii_integration_backend";
-
-let actor = ii_integration_backend;
-
-console.log(process.env.CANISTER_ID_INTERNET_IDENTITY);
-import { contacts_backend } from '../../declarations/contacts_backend';
+console.log(process.env.CANISTER_ID_CONTACTS_BACKEND);
 
 const emptyContact = { name: '', email: '', phone: '' };
 
@@ -52,7 +41,7 @@ function App() {
     });
     const identity = authClient.getIdentity();
     const agent = new HttpAgent({ identity });
-    actor = createActor(process.env.CANISTER_ID_II_INTEGRATION_BACKEND, {
+    actor = createActor(process.env.CANISTER_ID_CONTACTS_BACKEND, {
       agent,
     });
   };
