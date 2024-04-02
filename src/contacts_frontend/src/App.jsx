@@ -1,4 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { AuthClient } from "@dfinity/auth-client";
+import { HttpAgent } from "@dfinity/agent";
+import {
+    createActor,
+    ii_integration_backend,
+} from "../../declarations/ii_integration_backend";
+
+let actor = ii_integration_backend;
+
+console.log(process.env.CANISTER_ID_INTERNET_IDENTITY);
 import { contacts_backend } from '../../declarations/contacts_backend';
 
 const emptyContact = { name: '', email: '', phone: '' };
@@ -8,6 +18,11 @@ function App() {
   const [contact, setContact] = useState(emptyContact);
   const [contacts, setContacts] = useState([]);
   const [selectedContactId, setSelectedContactId] = useState(null);
+  const [authClient, setAuthClient] = useState(null);
+
+  useEffect(() => {
+    AuthClient.create().then(setAuthClient);
+  }, []);
 
   const handleCreateAccount = async () => {
     await contacts_backend.create_account({ username });
@@ -53,11 +68,11 @@ function App() {
       <br />
       <br />
       <form>
-        <button id="login">Login!</button>
+        <button onClick={handleLogin}>Login!</button>
       </form>
       <br />
       <form>
-        <button id="whoAmI">Who Am I</button>
+        <button onClick={handleWhoAmI}>Who Am I</button>
       </form>
       <section id="principal"></section>
       {/* UI components for account creation */}
