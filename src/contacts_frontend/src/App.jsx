@@ -49,6 +49,17 @@ function App() {
   return (
     <main>
       <h1>Contacts Manager</h1>
+      <img src="logo2.svg" alt="DFINITY logo" />
+      <br />
+      <br />
+      <form>
+        <button id="login">Login!</button>
+      </form>
+      <br />
+      <form>
+        <button id="whoAmI">Who Am I</button>
+      </form>
+      <section id="principal"></section>
       {/* UI components for account creation */}
       <section>
         <input
