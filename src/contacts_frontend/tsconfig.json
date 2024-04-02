@@ -26,5 +26,10 @@
   },
   "include": [
     "src"
-  ]
+  ],
+  "baseUrl": "./src",
+  "paths": {
+    "@components/*": ["../contacts_frontend/src/components/*"],
+    "@declarations/*": ["../declarations/*"],
+  }
 }
