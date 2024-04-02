@@ -9,6 +9,16 @@ import {
 let actor = ii_integration_backend;
 
 console.log(process.env.CANISTER_ID_INTERNET_IDENTITY);
+import { AuthClient } from "@dfinity/auth-client";
+import { HttpAgent } from "@dfinity/agent";
+import {
+    createActor,
+    ii_integration_backend,
+} from "../../declarations/ii_integration_backend";
+
+let actor = ii_integration_backend;
+
+console.log(process.env.CANISTER_ID_INTERNET_IDENTITY);
 import { contacts_backend } from '../../declarations/contacts_backend';
 
 const emptyContact = { name: '', email: '', phone: '' };
@@ -23,6 +33,29 @@ function App() {
   useEffect(() => {
     AuthClient.create().then(setAuthClient);
   }, []);
+
+  const handleWhoAmI = async () => {
+    const principal = await actor.whoami();
+    document.getElementById("principal").innerText = principal.toString();
+  };
+
+  const handleLogin = async () => {
+    let authClient = await AuthClient.create();
+    await new Promise((resolve) => {
+      authClient.login({
+        identityProvider:
+          process.env.DFX_NETWORK === "ic"
+            ? "https://identity.ic0.app"
+            : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
+        onSuccess: resolve,
+      });
+    });
+    const identity = authClient.getIdentity();
+    const agent = new HttpAgent({ identity });
+    actor = createActor(process.env.CANISTER_ID_II_INTEGRATION_BACKEND, {
+      agent,
+    });
+  };
 
   const handleCreateAccount = async () => {
     await contacts_backend.create_account({ username });
@@ -68,11 +101,11 @@ function App() {
       <br />
       <br />
       <form>
-        <button onClick={handleLogin}>Login!</button>
+        <button id="login" onClick={handleLogin}>Login!</button>
       </form>
       <br />
       <form>
-        <button onClick={handleWhoAmI}>Who Am I</button>
+        <button id="whoAmI" onClick={handleWhoAmI}>Who Am I</button>
       </form>
       <section id="principal"></section>
       {/* UI components for account creation */}
