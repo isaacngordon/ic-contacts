@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import UserCard from '@components/UserCard';
+import UserCard from './components/UserCard';
 import contacts_backend from '@declarations/contacts_backend';
 
 let actor = contacts_backend;
