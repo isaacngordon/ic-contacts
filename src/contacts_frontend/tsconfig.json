@@ -29,7 +29,7 @@
   ],
   "baseUrl": "./src",
   "paths": {
-    "@components/*": ["../contacts_frontend/src/components/*"],
-    "@declarations/*": ["../declarations/*"],
+    "@components/*": ["components/*"],
+    "@declarations/*": ["declarations/*"],
   }
 }
