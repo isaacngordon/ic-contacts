@@ -6,7 +6,8 @@ import { createActor } from "@declarations/contacts_backend";
 let actor;
 
 function UserCard({ setActor }) {
-  const handleWhoAmI = async () => {
+  const handleWhoAmI = async (event) => {
+    event.preventDefault();
     const principal = await actor.whoami();
     document.getElementById("principal").innerText = principal.toString();
   };
