@@ -1,15 +1,20 @@
 import React from 'react';
 import { AuthClient } from "@dfinity/auth-client";
 import { HttpAgent } from "@dfinity/agent";
-import { createActor } from "@declarations/contacts_backend";
+import { createActor, contacts_backend } from "../../../declarations/contacts_backend";
 
-let actor;
+let actor = contacts_backend;
 
 function UserCard({ setActor }) {
   const handleWhoAmI = async (event) => {
     event.preventDefault();
-    const principal = await actor.whoami();
+    const [principal, username] = await actor.whoami();
     document.getElementById("principal").innerText = principal.toString();
+    
+    if (username)
+      document.getElementById("username").innerText = username.toString();
+    else
+      document.getElementById("username").innerText = "No Account";
   };
 
   const handleLogin = async (event) => {
@@ -32,7 +37,6 @@ function UserCard({ setActor }) {
     actor = createActor(process.env.CANISTER_ID_CONTACTS_BACKEND, {
       agent,
     });
-    console.log("identity", identity);
     setActor(actor); 
   };
 
@@ -46,6 +50,7 @@ function UserCard({ setActor }) {
         <button id="whoAmI" onClick={handleWhoAmI}>Who Am I</button>
       </form>
       <section id="principal"></section>
+      <section id="username">...</section>
     </section>
   );
 }

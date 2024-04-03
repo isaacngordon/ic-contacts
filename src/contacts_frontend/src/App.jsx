@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import UserCard from '@components/UserCard';
 import {contacts_backend} from '@declarations/contacts_backend';
 
-let actor = contacts_backend;
-
-
 const emptyContact = { name: '', email: '', phone: '' };
 
 function App() {
@@ -13,6 +10,7 @@ function App() {
   const [contacts, setContacts] = useState([]);
   const [selectedContactId, setSelectedContactId] = useState(null);
   const [authClient, setAuthClient] = useState(null);
+  const [actor, setActor] = useState(contacts_backend);
 
   useEffect(() => {
     // Removed the AuthClient creation from here
@@ -21,7 +19,7 @@ function App() {
   // ... rest of the App component ...
 
   const handleCreateAccount = async () => {
-    await contacts_backend.create_account({ username });
+    await actor.create_account({ username });
     // Fetch contacts or update state as needed
   };
 
@@ -54,11 +52,6 @@ function App() {
     await contacts_backend.revoke_shared_contact(contactId, revokeFromUsername);
     // Fetch contacts or update state as needed
   };
-
-  const setActor = (actor) => {
-    actor = actor;
-  }
-
 
   // Placeholder for the new UI components and interactions
   return (
