@@ -67,7 +67,10 @@ function App() {
       <img src="logo2.svg" alt="DFINITY logo" />
       <br />
       <br />
+     
+      {/* UI components for user authentication */}
       <UserCard setActor={setActor} />
+     
       {/* UI components for account creation */}
       <section>
         <input
@@ -78,8 +81,11 @@ function App() {
         />
         <button onClick={handleCreateAccount}>Create Account</button>
       </section>
+     
       {/* UI components for contact management */}
+     
       {/* ... Add form elements and buttons for add, edit, delete, share, and revoke operations ... */}
+     
       {/* ... rest of the UI components ... */}
     </main>
   );
