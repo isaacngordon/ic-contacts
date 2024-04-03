@@ -1,6 +1,6 @@
 import React from 'react';
-// import { AuthClient } from "@dfinity/auth-client";
-// import { HttpAgent } from "@dfinity/agent";
+import { AuthClient } from "@dfinity/auth-client";
+import { HttpAgent } from "@dfinity/agent";
 import { createActor } from "@declarations/contacts_backend";
 
 let actor;
@@ -12,7 +12,6 @@ function UserCard({ setActor }) {
   };
 
   const handleLogin = async () => {
-    let authClient = await AuthClient.create();
     let authClient = await AuthClient.create();
     await new Promise((resolve) => {
       authClient.login({
