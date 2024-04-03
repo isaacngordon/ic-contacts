@@ -11,7 +11,9 @@ function UserCard({ setActor }) {
     document.getElementById("principal").innerText = principal.toString();
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (event) => {
+    event.preventDefault();
+
     let authClient = await AuthClient.create();
     await new Promise((resolve) => {
       authClient.login({
@@ -27,7 +29,7 @@ function UserCard({ setActor }) {
     actor = createActor(process.env.CANISTER_ID_CONTACTS_BACKEND, {
       agent,
     });
-    setActor(actor);
+    setActor(actor); 
   };
 
   return (
