@@ -13,6 +13,7 @@ function UserCard({ setActor }) {
 
   const handleLogin = async () => {
     let authClient = await AuthClient.create();
+    let authClient = await AuthClient.create();
     await new Promise((resolve) => {
       authClient.login({
         identityProvider:
