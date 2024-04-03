@@ -25,11 +25,14 @@ function UserCard({ setActor }) {
         onSuccess: resolve,
       });
     });
+
+    // Create an actor with the authenticated identity
     const identity = authClient.getIdentity();
     const agent = new HttpAgent({ identity });
     actor = createActor(process.env.CANISTER_ID_CONTACTS_BACKEND, {
       agent,
     });
+    console.log("identity", identity);
     setActor(actor); 
   };
 
