@@ -42,6 +42,10 @@ export default defineConfig({
         replacement: fileURLToPath(new URL("../declarations", import.meta.url)),
       },
       {
+        find: "@dfinity",
+        replacement: fileURLToPath(new URL("./node_modules/@dfinity", import.meta.url)),
+      },
+      {
         find: "@components",
         replacement: fileURLToPath(new URL("./src/components", import.meta.url)),
       }
