@@ -2,9 +2,10 @@
 mod tests {
     use crate::{data, response::httpish};
 
-    use candid::{self, encode_one, Principal};
+    use candid::{self, decode_args, encode_one, utils::ArgumentDecoder, CandidType, Principal};
     use ic_cdk::api::management_canister::main::CanisterId;
     use pocket_ic::{PocketIc, WasmResult};
+    use serde::Deserialize;
 
     fn load_contacts_backend_wasm() -> Vec<u8> {
         let wasm_path = "/Users/isaacgordon/Documents/ic/contacts/target/wasm32-unknown-unknown/release/contacts_backend.wasm";
@@ -24,21 +25,30 @@ mod tests {
         (pic, canister_id)
     }
 
-    ///Helper function to decode a WasmResult into a Result that can be checked immediately.
-    fn decode_wasm_result(wasm_result: WasmResult) -> Result<httpish::BasicResponse, String> {
-        match wasm_result {
-            WasmResult::Reply(reply_bytes) => {
-                let decoded =
-                    candid::decode_one(&reply_bytes).expect("Failed to decode reply");
-                eprintln!("Reply: {:?}", decoded);
-                decoded
-            }
-            WasmResult::Reject(reject_message) => {
-                eprintln!("Reject message: {}", reject_message);
-                Err(reject_message)
-            }
+    /// Helper function for calling pocket ic update call
+    pub fn update<T>(
+        ic: &PocketIc,
+        sender: Principal, 
+        receiver: Principal, 
+        method: &str, 
+        args: Vec<u8>
+    ) -> Result<T, String> 
+    where
+        T: CandidType + for<'a> Deserialize<'a> + for<'a> ArgumentDecoder<'a>,
+    {
+        match ic.update_call(receiver, sender, method, args) {
+            Ok(WasmResult::Reply(data)) => {
+                // Directly decode the data to T, leveraging the fact that T's
+                // Deserialize implementation is valid for any lifetime 'a.
+                // This aligns with the decode_args function's requirement.
+                let tuple: T = decode_args(&data).expect("Failed to decode reply");
+                Ok(tuple)
+            },
+            Ok(WasmResult::Reject(error_message)) => Err(error_message.to_string()),
+            Err(user_error) => Err(user_error.to_string()),
         }
     }
+    
 
     /// Helper function to call the create_account function on the canister, and return a Result that can be checked immediately.
     fn call_create_account(
@@ -46,17 +56,15 @@ mod tests {
         canister_id: CanisterId,
         principal: Principal,
         new_user: data::new_user::NewUser,
-    ) -> Result<httpish::BasicResponse, String> {
-        let wasm_result = pic
-            .update_call(
-                canister_id,
-                principal,
-                "create_account",
-                encode_one(new_user).unwrap(),
-            )
-            .expect("Failed to call create_account");
-
-        decode_wasm_result(wasm_result)
+    ) -> Result<(httpish::BasicResponse,), String> {
+        update::<(httpish::BasicResponse,)>
+        (
+            &pic, 
+            principal, 
+            canister_id, 
+            "create_account", 
+            encode_one(new_user).unwrap()
+        )
     }
 
     /// Helper function to call create_contact on the canister, and return a Result that can be checked immediately.
@@ -65,17 +73,14 @@ mod tests {
         canister_id: CanisterId,
         principal: Principal,
         new_contact: data::contact::Contact,
-    ) -> Result<httpish::BasicResponse, String> {
-        let wasm_result = pic
-            .update_call(
-                canister_id,
-                principal,
-                "create_contact",
-                encode_one(new_contact).unwrap(),
-            )
-            .expect("Failed to call create_contact");
-
-        decode_wasm_result(wasm_result)
+    ) ->  Result<(httpish::BasicResponse,), String>{
+        update::<(httpish::BasicResponse,)>(
+            &pic, 
+            principal, 
+            canister_id, 
+            "create_contact", 
+            encode_one(new_contact).unwrap()
+        )
     }
 
     /// Helper function to call get_contacts on the canister, and return a Result that can be checked immediately.
@@ -83,23 +88,14 @@ mod tests {
         pic: &PocketIc,
         canister_id: CanisterId,
         principal: Principal,
-    ) -> Result<Vec<data::contact::Contact>, String> {
-        let wasm_result = pic
-            .query_call(canister_id, principal, "get_contacts", encode_one(()).unwrap())
-            .expect("Failed to call get_contacts");
-
-        match wasm_result {
-            WasmResult::Reply(reply_bytes) => {
-                let decoded: Result<Vec<data::contact::Contact>, String> =
-                    candid::decode_one(&reply_bytes).expect("Failed to decode reply");
-                eprintln!("Reply: {:?}", decoded);
-                decoded
-            }
-            WasmResult::Reject(reject_message) => {
-                eprintln!("Reject message: {}", reject_message);
-                Err(reject_message)
-            }
-        }
+    ) -> Result<(httpish::BasicResponse, Vec<data::contact::Contact>), String> {
+        update(
+            &pic, 
+            principal, 
+            canister_id, 
+            "get_contacts", 
+            encode_one(()).unwrap()
+        )   
     }
 
     /// Testing the create_account function and its adherence to the requirements.
@@ -136,7 +132,7 @@ mod tests {
         let first_account_create = call_create_account(&pic, canister_id, principal1, user1);
         assert!(
             first_account_create.is_ok_and(|response| 
-                matches!(response, httpish::BasicResponse::Success(_))
+                matches!(response.0, httpish::BasicResponse::Success(_))
             ),
             "First account creation failed when it should not have. Expected a `Success` response, but didn't get one."
         );
@@ -146,7 +142,7 @@ mod tests {
         let second_account_create = call_create_account(&pic, canister_id, principal2, user2);
         assert!(
             second_account_create.is_ok_and(|response| 
-                matches!(response, httpish::BasicResponse::Success(_))
+                matches!(response.0, httpish::BasicResponse::Success(_))
             ),
             "Second account creation failed when it should not have. Expected `Ok` but got `Err`."
         );
@@ -157,7 +153,7 @@ mod tests {
             call_create_account(&pic, canister_id, principal3, user1_duplicate);
         assert!(
             already_registered_username.is_ok_and(|response| 
-                matches!(response, httpish::BasicResponse::Conflict(_))
+                matches!(response.0, httpish::BasicResponse::Conflict(_))
             ),
             "Username should already be taken. Expected `Err` but got `Ok`."
         );
@@ -167,7 +163,7 @@ mod tests {
         let already_registered_user = call_create_account(&pic, canister_id, principal2, user3);
         assert!(
             already_registered_user.is_ok_and(|response| 
-                matches!(response, httpish::BasicResponse::Conflict(_))
+                matches!(response.0, httpish::BasicResponse::Conflict(_))
             ),
             "User should already have an account. Expected `Err` but got `Ok`."
         );
@@ -200,7 +196,7 @@ mod tests {
         let create_contact_no_account = call_create_contact(&pic, canister_id, principal, new_contact.clone());
         assert!(
             create_contact_no_account.is_ok_and(|response| 
-                matches!(response, httpish::BasicResponse::Unauthorized)
+                matches!(response.0, httpish::BasicResponse::Unauthorized)
             ),
             "User should not have been able to create a contact without an account. Expected `Unauthorized`."
         );
@@ -217,7 +213,7 @@ mod tests {
         let create_contact = call_create_contact(&pic, canister_id, principal, new_contact.clone());
         assert!(
             create_contact.is_ok_and(|response| 
-                matches!(response, httpish::BasicResponse::Success(_))
+                matches!(response.0, httpish::BasicResponse::Success(_))
             ),
             "Contact creation failed when it should not have. Expected `Ok` but got `Err`."
         );
@@ -231,7 +227,7 @@ mod tests {
         );
 
         // Test that contacts contain the created contact
-        let retrieved_contacts = contacts.unwrap();
+        let retrieved_contacts = contacts.unwrap().1;
         println!("Number of retrieved contacts: {}", retrieved_contacts.len());
         assert!(
             retrieved_contacts.contains(&new_contact),
