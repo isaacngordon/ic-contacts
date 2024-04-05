@@ -1,4 +1,9 @@
-type Contact = record { "name": text; "email": text; "phone": text };
+type Contact = record { 
+    "name": text; 
+    "email": text; 
+    "phone": text 
+};
+
 type BasicResponse = variant { 
     Success: text;
     Unauthorized;

@@ -126,7 +126,7 @@ fn get_contacts() -> (httpish::BasicResponse, Vec<Contact>) {
         return (httpish::BasicResponse::Unauthorized, Vec::new());
     }
 
-    let contacts: Vec<Contact> = CONTACT_MAP.with(|contact_map| {
+    let contacts = CONTACT_MAP.with(|contact_map| {
         let contacts = contact_map.borrow();
         contact_ids
             .unwrap()
