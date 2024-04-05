@@ -222,7 +222,9 @@ mod tests {
         println!("Retrieving contacts for principal1...");
         let contacts = call_get_contacts(&pic, canister_id, principal);
         assert!(
-            contacts.is_ok(),
+            contacts.as_ref().is_ok_and(|response| 
+                matches!(response.0, httpish::BasicResponse::Success(_))
+            ),
             "Failed to retrieve contacts. Expected `Ok` but got `Err`."
         );
 
