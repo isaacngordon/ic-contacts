@@ -10,7 +10,7 @@ service : {
     "whoami": () -> (principal, opt text) query;
     "create_account": (record { "username": text }) -> (BasicResponse);
     "create_contact": (Contact) -> (BasicResponse);
-    "get_contacts": () -> (vec Contact ) query;
+    "get_contacts": () -> (BasicResponse, vec Contact ) query;
     "edit_contact": (nat64, record { "name": text; "email": text; "phone": text }) -> () oneway;
     "delete_contact": (nat64) -> () oneway;
     "share_contact": (nat64, text) -> () oneway;

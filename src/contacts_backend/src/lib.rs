@@ -1,5 +1,5 @@
-mod response;
 mod data;
+mod response;
 
 use data::new_user::NewUser;
 use ic_cdk::{api, query, update};
@@ -67,7 +67,11 @@ fn whoami() -> (Principal, Option<String>) {
 #[update]
 fn create_account(new_user: NewUser) -> httpish::BasicResponse {
     let principal = get_user_id();
-    ic_cdk::println!("/create_account [UPDATE] - Principal={:?} Username={}", principal.to_string(), new_user.username);
+    ic_cdk::println!(
+        "/create_account [UPDATE] - Principal={:?} Username={}",
+        principal.to_string(),
+        new_user.username
+    );
 
     // check if user already has an account
     let user_exists: bool = USER_MAP.with(|p| p.borrow().contains_key(&principal));
@@ -91,7 +95,7 @@ fn create_account(new_user: NewUser) -> httpish::BasicResponse {
         contacts: Vec::new(),
         shared_contacts: Vec::new(),
     };
-    
+
     USER_MAP.with(|p| p.borrow_mut().insert(principal, user.clone()));
     USERNAME_MAP.with(|p| p.borrow_mut().insert(new_user.username.clone(), principal));
 
@@ -101,39 +105,52 @@ fn create_account(new_user: NewUser) -> httpish::BasicResponse {
 
 /// Get the list of contacts for the current user.
 #[query]
-fn get_contacts() -> Result<Vec<Contact>, String> {
+fn get_contacts() -> (httpish::BasicResponse, Vec<Contact>) {
     let user_id = get_user_id();
-    ic_cdk::println!("/get_contacts [QUERY] - Principal={:?}", user_id.to_string());
+    ic_cdk::println!(
+        "/get_contacts [QUERY] - Principal={:?}",
+        user_id.to_string()
+    );
 
-    let contact_ids:Vec<ContactID> = USER_MAP.with(|user_map| {
+    let contact_ids: Result<Vec<ContactID>, httpish::BasicResponse> = USER_MAP.with(|user_map| {
         user_map
             .borrow()
             .get(&user_id)
-            .map_or(
-                Err("User not found".to_string()), 
-                |u| { Ok(u.contacts.clone()) }
-            )
-    })?;
+            .map_or(Err(httpish::BasicResponse::Unauthorized), |u| {
+                Ok(u.contacts.clone())
+            })
+    });
 
-    let contacts:Vec<Contact> = CONTACT_MAP.with(|contact_map| {
+    if contact_ids.is_err() {
+        ic_cdk::println!("/get_contacts [REJECT] - User not found");
+        return (httpish::BasicResponse::Unauthorized, Vec::new());
+    }
+
+    let contacts: Vec<Contact> = CONTACT_MAP.with(|contact_map| {
         let contacts = contact_map.borrow();
         contact_ids
+            .unwrap()
             .iter()
-            .map(|id| {
-                contacts.get(id).unwrap().clone()
-            })
+            .map(|id| contacts.get(id).unwrap().clone())
             .collect()
     });
 
     ic_cdk::println!("/get_contacts [DONE] - Contacts: {:?}", contacts);
-    Ok(contacts)
+    (
+        httpish::BasicResponse::Success("Contacts retrieved successfully".into()),
+        contacts,
+    )
 }
 
 /// Create a new contact for the current user.
 #[update(name = "create_contact")]
 fn create_contact(new_contact: Contact) -> httpish::BasicResponse {
     let user_id = get_user_id();
-    ic_cdk::println!("/create_contact [UPDATE] - Principal={:?} Contact={:?}", user_id.to_string(), new_contact);
+    ic_cdk::println!(
+        "/create_contact [UPDATE] - Principal={:?} Contact={:?}",
+        user_id.to_string(),
+        new_contact
+    );
 
     let user: Option<User> = USER_MAP.with(|p| p.borrow().get(&user_id));
     if user.is_none() {
@@ -141,7 +158,7 @@ fn create_contact(new_contact: Contact) -> httpish::BasicResponse {
         return httpish::BasicResponse::Unauthorized;
     }
     let user = user.unwrap();
-    
+
     let new_contact_id = CONTACT_MAP.with(|p| {
         let mut contacts = p.borrow_mut();
         let new_id = contacts.len() as u64;
@@ -152,11 +169,10 @@ fn create_contact(new_contact: Contact) -> httpish::BasicResponse {
     let mut updated_user = user.clone();
     updated_user.contacts.push(new_contact_id);
     USER_MAP.with(|p| p.borrow_mut().insert(user_id, updated_user));
-    
+
     ic_cdk::println!("/create_contact [DONE] - Contact: {:?}", new_contact);
     httpish::BasicResponse::Success("Contact created successfully".into())
 }
-
 
 // #[update]
 // fn edit_contact(contact_id: u64, updated_contact: NewContact) -> Result<(), String> {
