@@ -65,7 +65,7 @@ fn whoami() -> (Principal, Option<String>) {
 
 /// Create a new user account by providing a unique username.
 #[update]
-fn create_account(new_user: NewUser) -> Result<httpish::BasicResponse, String> {
+fn create_account(new_user: NewUser) -> httpish::BasicResponse {
     let principal = get_user_id();
     ic_cdk::println!("/create_account [UPDATE] - Principal={:?} Username={}", principal.to_string(), new_user.username);
 
@@ -73,7 +73,7 @@ fn create_account(new_user: NewUser) -> Result<httpish::BasicResponse, String> {
     let user_exists: bool = USER_MAP.with(|p| p.borrow().contains_key(&principal));
     if user_exists {
         ic_cdk::println!("/create_account [REJECT] - User already has an account");
-        return Ok(httpish::BasicResponse::Conflict("User already has an account".into()));
+        return httpish::BasicResponse::Conflict("User already has an account".into());
     }
 
     // check if username is already taken
@@ -81,7 +81,7 @@ fn create_account(new_user: NewUser) -> Result<httpish::BasicResponse, String> {
 
     if username_taken {
         ic_cdk::println!("/create_account [REJECT] - Username already taken");
-        return Ok(httpish::BasicResponse::Conflict("Username already taken".into()));
+        return httpish::BasicResponse::Conflict("Username already taken".into());
     }
 
     // create new user
@@ -96,13 +96,14 @@ fn create_account(new_user: NewUser) -> Result<httpish::BasicResponse, String> {
     USERNAME_MAP.with(|p| p.borrow_mut().insert(new_user.username.clone(), principal));
 
     ic_cdk::println!("/create_account [DONE] - User: {:?}", user);
-    Ok(httpish::BasicResponse::Success("Account created successfully".into()))
+    httpish::BasicResponse::Success("Account created successfully".into())
 }
 
 /// Get the list of contacts for the current user.
 #[query]
 fn get_contacts() -> Result<Vec<Contact>, String> {
     let user_id = get_user_id();
+    ic_cdk::println!("/get_contacts [QUERY] - Principal={:?}", user_id.to_string());
 
     let contact_ids:Vec<ContactID> = USER_MAP.with(|user_map| {
         user_map
@@ -124,17 +125,20 @@ fn get_contacts() -> Result<Vec<Contact>, String> {
             .collect()
     });
 
+    ic_cdk::println!("/get_contacts [DONE] - Contacts: {:?}", contacts);
     Ok(contacts)
 }
 
 /// Create a new contact for the current user.
 #[update(name = "create_contact")]
-fn create_contact(new_contact: Contact) -> Result<httpish::BasicResponse, String> {
+fn create_contact(new_contact: Contact) -> httpish::BasicResponse {
     let user_id = get_user_id();
+    ic_cdk::println!("/create_contact [UPDATE] - Principal={:?} Contact={:?}", user_id.to_string(), new_contact);
+
     let user: Option<User> = USER_MAP.with(|p| p.borrow().get(&user_id));
-    
     if user.is_none() {
-        return Ok(httpish::BasicResponse::Unauthorized);
+        ic_cdk::println!("/create_contact [REJECT] - User not found");
+        return httpish::BasicResponse::Unauthorized;
     }
     let user = user.unwrap();
     
@@ -149,7 +153,8 @@ fn create_contact(new_contact: Contact) -> Result<httpish::BasicResponse, String
     updated_user.contacts.push(new_contact_id);
     USER_MAP.with(|p| p.borrow_mut().insert(user_id, updated_user));
     
-    Ok(httpish::BasicResponse::Success("Contact created successfully".into()))
+    ic_cdk::println!("/create_contact [DONE] - Contact: {:?}", new_contact);
+    httpish::BasicResponse::Success("Contact created successfully".into())
 }
 
 
