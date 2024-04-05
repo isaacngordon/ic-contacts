@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::data;
+    use crate::{data, response::httpish};
 
     use candid::{self, encode_one, Principal};
     use ic_cdk::api::management_canister::main::CanisterId;
@@ -25,10 +25,10 @@ mod tests {
     }
 
     ///Helper function to decode a WasmResult into a Result that can be checked immediately.
-    fn decode_wasm_result(wasm_result: WasmResult) -> Result<(), String> {
+    fn decode_wasm_result(wasm_result: WasmResult) -> Result<httpish::BasicResponse, String> {
         match wasm_result {
             WasmResult::Reply(reply_bytes) => {
-                let decoded: Result<(), String> =
+                let decoded =
                     candid::decode_one(&reply_bytes).expect("Failed to decode reply");
                 eprintln!("Reply: {:?}", decoded);
                 decoded
@@ -46,7 +46,7 @@ mod tests {
         canister_id: CanisterId,
         principal: Principal,
         new_user: data::new_user::NewUser,
-    ) -> Result<(), String> {
+    ) -> Result<httpish::BasicResponse, String> {
         let wasm_result = pic
             .update_call(
                 canister_id,
@@ -65,7 +65,7 @@ mod tests {
         canister_id: CanisterId,
         principal: Principal,
         new_contact: data::contact::Contact,
-    ) -> Result<(), String> {
+    ) -> Result<httpish::BasicResponse, String> {
         let wasm_result = pic
             .update_call(
                 canister_id,
@@ -135,15 +135,19 @@ mod tests {
         println!("Creating account for principal1...");
         let first_account_create = call_create_account(&pic, canister_id, principal1, user1);
         assert!(
-            first_account_create.is_ok(),
-            "First account creation failed when it should not have. Expected `Ok` but got `Err`."
+            first_account_create.is_ok_and(|response| 
+                matches!(response, httpish::BasicResponse::Success(_))
+            ),
+            "First account creation failed when it should not have. Expected a `Success` response, but didn't get one."
         );
 
         // Test another user creates a new account with a different username. (Requirement 1)
         println!("Creating account for principal2...");
         let second_account_create = call_create_account(&pic, canister_id, principal2, user2);
         assert!(
-            second_account_create.is_ok(),
+            second_account_create.is_ok_and(|response| 
+                matches!(response, httpish::BasicResponse::Success(_))
+            ),
             "Second account creation failed when it should not have. Expected `Ok` but got `Err`."
         );
 
@@ -152,7 +156,9 @@ mod tests {
         let already_registered_username =
             call_create_account(&pic, canister_id, principal3, user1_duplicate);
         assert!(
-            already_registered_username.is_err(),
+            already_registered_username.is_ok_and(|response| 
+                matches!(response, httpish::BasicResponse::Conflict(_))
+            ),
             "Username should already be taken. Expected `Err` but got `Ok`."
         );
 
@@ -160,7 +166,9 @@ mod tests {
         println!("Creating account for principal2 when they already have one...");
         let already_registered_user = call_create_account(&pic, canister_id, principal2, user3);
         assert!(
-            already_registered_user.is_err(),
+            already_registered_user.is_ok_and(|response| 
+                matches!(response, httpish::BasicResponse::Conflict(_))
+            ),
             "User should already have an account. Expected `Err` but got `Ok`."
         );
     }
@@ -191,8 +199,10 @@ mod tests {
         println!("Creating contact for principal1 without an account...");
         let create_contact_no_account = call_create_contact(&pic, canister_id, principal, new_contact.clone());
         assert!(
-            create_contact_no_account.is_err(),
-            "User should not have been able to create a contact without an account. Expected `Err` but got `Ok`."
+            create_contact_no_account.is_ok_and(|response| 
+                matches!(response, httpish::BasicResponse::Unauthorized)
+            ),
+            "User should not have been able to create a contact without an account. Expected `Unauthorized`."
         );
 
         // Test creating an account.
@@ -206,7 +216,9 @@ mod tests {
         println!("Creating contact for principal1...");
         let create_contact = call_create_contact(&pic, canister_id, principal, new_contact.clone());
         assert!(
-            create_contact.is_ok(),
+            create_contact.is_ok_and(|response| 
+                matches!(response, httpish::BasicResponse::Success(_))
+            ),
             "Contact creation failed when it should not have. Expected `Ok` but got `Err`."
         );
 

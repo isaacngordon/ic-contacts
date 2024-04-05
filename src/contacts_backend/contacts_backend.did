@@ -1,10 +1,15 @@
 type Contact = record { "name": text; "email": text; "phone": text };
-type Error = text;
+type BasicResponse = variant { 
+    Success: text;
+    Unauthorized;
+    Forbidden;
+    Conflict: text;
+ };
 
 service : {
     "whoami": () -> (principal, opt text) query;
-    "create_account": (record { "username": text }) -> (variant { ok: null; err: Error });
-    "create_contact": (Contact) -> () oneway;
+    "create_account": (record { "username": text }) -> (BasicResponse);
+    "create_contact": (Contact) -> (BasicResponse);
     "get_contacts": () -> (vec Contact ) query;
     "edit_contact": (nat64, record { "name": text; "email": text; "phone": text }) -> () oneway;
     "delete_contact": (nat64) -> () oneway;

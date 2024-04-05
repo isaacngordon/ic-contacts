@@ -1,3 +1,4 @@
+mod response;
 mod data;
 
 use data::new_user::NewUser;
@@ -5,6 +6,7 @@ use ic_cdk::{api, query, update};
 
 use data::contact::{Contact, ContactID};
 use data::user::User;
+use response::httpish;
 
 // Data Structures
 use candid::Principal;
@@ -63,7 +65,7 @@ fn whoami() -> (Principal, Option<String>) {
 
 /// Create a new user account by providing a unique username.
 #[update]
-fn create_account(new_user: NewUser) -> Result<(), String> {
+fn create_account(new_user: NewUser) -> Result<httpish::BasicResponse, String> {
     let principal = get_user_id();
     ic_cdk::println!("/create_account [UPDATE] - Principal={:?} Username={}", principal.to_string(), new_user.username);
 
@@ -71,7 +73,7 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
     let user_exists: bool = USER_MAP.with(|p| p.borrow().contains_key(&principal));
     if user_exists {
         ic_cdk::println!("/create_account [REJECT] - User already has an account");
-        return Err("User already has an account".to_string());
+        return Ok(httpish::BasicResponse::Conflict("User already has an account".into()));
     }
 
     // check if username is already taken
@@ -79,7 +81,7 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
 
     if username_taken {
         ic_cdk::println!("/create_account [REJECT] - Username already taken");
-        return Err("Username already taken".to_string());
+        return Ok(httpish::BasicResponse::Conflict("Username already taken".into()));
     }
 
     // create new user
@@ -94,7 +96,7 @@ fn create_account(new_user: NewUser) -> Result<(), String> {
     USERNAME_MAP.with(|p| p.borrow_mut().insert(new_user.username.clone(), principal));
 
     ic_cdk::println!("/create_account [DONE] - User: {:?}", user);
-    Ok(())
+    Ok(httpish::BasicResponse::Success("Account created successfully".into()))
 }
 
 /// Get the list of contacts for the current user.
@@ -127,10 +129,14 @@ fn get_contacts() -> Result<Vec<Contact>, String> {
 
 /// Create a new contact for the current user.
 #[update(name = "create_contact")]
-fn create_contact(new_contact: Contact) -> Result<(), String> {
+fn create_contact(new_contact: Contact) -> Result<httpish::BasicResponse, String> {
     let user_id = get_user_id();
     let user: Option<User> = USER_MAP.with(|p| p.borrow().get(&user_id));
-    let user = user.ok_or("User not found".to_string())?;
+    
+    if user.is_none() {
+        return Ok(httpish::BasicResponse::Unauthorized);
+    }
+    let user = user.unwrap();
     
     let new_contact_id = CONTACT_MAP.with(|p| {
         let mut contacts = p.borrow_mut();
@@ -143,7 +149,7 @@ fn create_contact(new_contact: Contact) -> Result<(), String> {
     updated_user.contacts.push(new_contact_id);
     USER_MAP.with(|p| p.borrow_mut().insert(user_id, updated_user));
     
-    Ok(())
+    Ok(httpish::BasicResponse::Success("Contact created successfully".into()))
 }
 
 

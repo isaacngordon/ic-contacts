@@ -1,5 +1,4 @@
-use candid::CandidType;
-use serde::Deserialize;
+use candid::{CandidType, Deserialize};
 
 #[derive(CandidType, Deserialize)]
 pub struct NewUser {
