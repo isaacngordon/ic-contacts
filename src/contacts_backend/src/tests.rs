@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::{data, response::httpish};
+    use crate::{data::{self, contact}, response::httpish};
 
     use candid::{self, decode_args, encode_one, utils::ArgumentDecoder, CandidType, Principal};
     use ic_cdk::api::management_canister::main::CanisterId;
@@ -178,12 +178,14 @@ mod tests {
     #[test]
     fn test_create_and_retrieve_contacts() {
         // Set up a user and a contact.
+        let mut contact_id_counter = data::counter::Counter::new();
         
-        let new_contact = data::contact::Contact {
-            name: "John Doe".to_string(),
-            email: "johndoe@example.com".to_string(),
-            phone: "123-456-7890".to_string(),
-        };
+        let new_contact = data::contact::Contact::new( 
+            "John Doe".to_string(),
+            "johndoe@example.com".to_string(),
+            "123-456-7890".to_string(),
+            None
+        );
 
         // init pocket-ic canister
         let (pic, canister_id) = deploy_test_canister();

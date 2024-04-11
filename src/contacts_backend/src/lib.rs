@@ -11,10 +11,10 @@ use response::httpish;
 // Data Structures
 use candid::Principal;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
+use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, };
 use std::cell::RefCell;
 
-mod tests; // This line will be modified to point to the new tests.rs file.
+mod tests; 
 
 // Global State
 type Memory = VirtualMemory<DefaultMemoryImpl>;

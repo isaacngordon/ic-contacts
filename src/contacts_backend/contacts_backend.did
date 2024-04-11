@@ -1,4 +1,5 @@
 type Contact = record { 
+    "id": opt nat64;
     "name": text; 
     "email": text; 
     "phone": text 
